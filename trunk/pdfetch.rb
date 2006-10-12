@@ -9,10 +9,13 @@ module Pdfetch::Controllers
     def get
       @headers["Content-Type"] = "text/css; charset=utf-8"
       @body = %{
+
+/* main.css */
 body { margin: 0; padding: 10; font-size: small; font-family: arial, sans; }
 a { text-decoration: none;}
 h1 { font-size: 110%; }
 p { font-size: 90%; }
+
 }
     end
   end
