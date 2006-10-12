@@ -50,7 +50,7 @@ module Pdfetch::Views
 
   def index
     h1 @article.title
-    p { "#{u @article.journal} #{b @article.year} #{@article.volume}(#{@article.issue}):#{@article.pages}  PMID:&nbsp;#{a @article.pmid, :href => 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=search&db=pubmed&term=' + @article.pmid }" }
+    p { "#{u @article.journal} #{b @article.year} #{@article.volume}(#{@article.issue}):#{@article.pages}  PMID:&nbsp;#{a @article.pmid, :href => 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=retrieve&db=pubmed&dopt=abstract&list_uids=' + @article.pmid }" }
     p { "#{i @article.authors.join(' and ')}" } unless @article.authors.empty?
     p @article.abstract unless @article.abstract.blank?
   end
