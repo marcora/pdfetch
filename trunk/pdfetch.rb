@@ -1,12 +1,15 @@
 require 'camping'
+require 'uri'
 require 'bio'
 
 Camping.goes :Pdfetch
 
 module Pdfetch::Controllers
 
-  class Index < R '/(\d+)'
-    def get(pmid)
+  class Index < R '/(.*)'
+    def get(uri)
+      # extract the query part of the uri and look for the pmid
+      pmid = /list_uids=(\d+)/.match(URI.split(uri)[7])[1]
       @article = Bio::MEDLINE.new(Bio::PubMed.query(pmid))
       if pmid.to_s != @article.pmid
         render :error
