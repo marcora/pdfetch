@@ -1,29 +1,14 @@
 require 'camping'
-require 'uri'
 require 'bio'
 
 Camping.goes :Pdfetch
 
 module Pdfetch::Controllers
 
-  class Index < R '/(.*)'
-    def get(uri)
-      # extract the query part of the uri and look for the pmid
-      pmid = /list_uids=(\d+)/.match(URI.split(uri)[7])[1]
-      @article = Bio::MEDLINE.new(Bio::PubMed.query(pmid))
-      if pmid.to_s != @article.pmid
-        render :error
-      else
-        render :index
-      end
-    end
-  end
-
   class MainCss < R '/main.css'
     def get
       @headers["Content-Type"] = "text/css; charset=utf-8"
       @body = %{
-/* main.css */
 body { margin: 0; padding: 10; font-size: small; font-family: arial, sans; }
 a { text-decoration: none;}
 h1 { font-size: 110%; }
@@ -32,6 +17,22 @@ p { font-size: 90%; }
     end
   end
 
+  class Index < R '/(.*)'
+    def get(uri)
+      begin
+        # extract the pmid from the uri
+        pmid = /list_uids=(\d+)/.match(uri)[1]
+        
+        # fetch the article from pubmed using pmid
+        @article = Bio::MEDLINE.new(Bio::PubMed.query(pmid))
+        
+        render :index
+      rescue
+        render :error
+      end
+    end
+  end
+  
 end
 
 module Pdfetch::Views
@@ -39,7 +40,6 @@ module Pdfetch::Views
   def layout
     xhtml_strict do
       head do
-        title "PDFetch: #{@article.pmid}"
         link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
       end
       body do
@@ -56,7 +56,7 @@ module Pdfetch::Views
   end
 
   def error
-    p "PDFetch cannot fetch article from PubMed or reprint from publisher."
+    p "PDFetch cannot fetch article from PubMed or reprint from publisher. Check that the browser url is correct and that the internet connection is working."
   end
 
 end
