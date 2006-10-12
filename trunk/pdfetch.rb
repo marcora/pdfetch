@@ -1,6 +1,5 @@
 require 'camping'
 
-require 'htmlentities'
 require 'bio'
 include Bio
 
@@ -24,7 +23,7 @@ module Pdfetch::Controllers
       @headers["Content-Type"] = "text/css; charset=utf-8"
       @body = %{
 /* main.css */
-body { margin: 0; padding: 0; font-size: small; }
+body { margin: 0; padding: 10; font-size: small; font-family: arial, sans; }
 a { text-decoration: none;}
 h1 { font-size: 110%; }
 p { font-size: 90%; }
