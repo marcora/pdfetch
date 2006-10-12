@@ -19,6 +19,19 @@ module Pdfetch::Controllers
     end
   end
 
+  class MainCss < R '/main.css'
+    def get
+      @headers["Content-Type"] = "text/css; charset=utf-8"
+      @body = %{
+/* main.css */
+body { margin: 0; padding: 0; font-size: small; }
+a { text-decoration: none;}
+h1 { font-size: 110%; }
+p { font-size: 90%; }
+}
+    end
+  end
+
 end
 
 module Pdfetch::Views
@@ -27,6 +40,7 @@ module Pdfetch::Views
     xhtml_strict do
       head do
         title "PDFetch: #{@article.pmid}"
+        link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
       end
       body do
         self << yield
