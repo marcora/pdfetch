@@ -1,7 +1,5 @@
 require 'camping'
-
 require 'bio'
-include Bio
 
 Camping.goes :Pdfetch
 
@@ -9,7 +7,7 @@ module Pdfetch::Controllers
 
   class Index < R '/(\d+)'
     def get(pmid)
-      @article = MEDLINE.new(PubMed.query(pmid))
+      @article = Bio::MEDLINE.new(Bio::PubMed.query(pmid))
       if pmid.to_s != @article.pmid
         render :error
       else
