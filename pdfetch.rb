@@ -40,10 +40,13 @@ p { font-size: 90%; }
     
     def get(id)
       @pmid = id
+      @uri = nil
       begin
         unless File.exist?("#{id}.pdf")
           m = WWW::Mechanize.new
           p = m.get("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks")
+          @uri = p.uri
+  
           if link = p.links.with.text(/pdf/i).and.href(/pdfstart/i) and not link.empty?
             puts "fetching #{id} (wiley)..."
             p = m.click link
@@ -116,7 +119,7 @@ module Pdfetch::Views
     html do
       head do
 #        link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
-        script "function gotopdf(){location.href=\"/#{@pmid}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
+        script "function gotouri(){location.href=\"#{@uri}\";} function gotopdf(){location.href=\"/#{@pmid}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
       self << yield
     end
@@ -127,7 +130,11 @@ module Pdfetch::Views
   end
 
   def failure
-    body :onload => 'goback()' do nil end
+    if @uri
+      body :onload => 'gotouri()' do nil end
+    else
+      body :onload => 'goback()' do nil end
+    end
   end
 
 end
