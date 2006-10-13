@@ -46,29 +46,35 @@ p { font-size: 90%; }
             puts "fetching #{id} (wiley)..."
             p = m.click link
             p = m.click p.frames.with.name(/main/i).and.src(/mode=pdf/i)
+          
           elsif link = p.links.with.href(/fulltext.pdf$/i) and not link.empty?
             puts "fetching #{id} (springerlink)..."
             p = m.click link
+          
           elsif link = p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i) and not link.empty?
             puts "fetching #{id} (cell via sciencedirect)..."
             p = m.click link
             p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
+          
+          elsif link = p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i) and not link.empty?
+            puts "fetching #{id} (generic)..."
+            p = m.click link
+
+          elsif link = p.links.with.text(/full text/i).and.href(/full/i) and not link.empty?
+            puts "fetching #{id} (npg)..."
+            p = m.click link
+            p = m.click p.links.with.href(/.pdf$/i)
+          
+          elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
+            puts "fetching #{id} (???)..."
+            p = m.click frame
+            p = m.click p.links.with.href(/.pdf$/i)
+                    
           elsif link = p.links.with.text(/pdf/i).and.href(/reprint/i) and not link.empty?
             puts "fetching #{id} (jbc)..."
             p = m.click link
             p = m.click p.frames.with.name(/reprint/i)
             p = m.click p.links.with.href(/.pdf$/i)
-          elsif link = p.links.with.text(/full text/i).and.href(/full/i) and not link.empty?
-            puts "fetching #{id} (npg)..."
-            p = m.click link
-            p = m.click p.links.with.href(/.pdf$/i)
-          elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
-            puts "fetching #{id} (???)..."
-            p = m.click frame
-            p = m.click p.links.with.href(/.pdf$/i)
-          else link = p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i) and not link.empty?
-            puts "fetching #{id} (generic)..."
-            p = m.click link
           end
 
           if p.kind_of? WWW::Mechanize::File
