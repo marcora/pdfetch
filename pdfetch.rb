@@ -73,26 +73,21 @@ end
 module Pdfetch::Views
 
   def layout
-    xhtml_strict do
+    html do
       head do
         link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
-        script "function goback(){window.history.back()}function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
+        script "function gopdf(){location.href=\"#{@pmid}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
-#      body :onload => 'waitngoback()' do
-      body do
-        self << yield
-      end
+      self << yield
     end
   end
 
   def success
-    p "PDFetch successfully fetched reprint from publisher."
-    p { "Click #{a 'here', :href => '#', :onclick => 'goback()'} to go back, or click #{a "here", :href => "#{@pmid}.pdf"} to view the reprint." }
+    body :onload => 'gopdf()' do nil end
   end
 
   def error
-    p "PDFetch cannot fetch article from PubMed or reprint from publisher. Check that the browser url is correct and that the internet connection is working."
-    p { "Click #{a 'here', :href => '#', :onclick => 'goback()'} to go back." }
+    body :onload => 'goback()' do nil end
   end
 
 end
