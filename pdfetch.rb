@@ -35,7 +35,9 @@ p { font-size: 90%; }
     end
   end 
   
+
   class Fetch < R '/fetch/(\d+)$'
+    
     def get(id)
       @pmid = id
       begin
@@ -55,15 +57,15 @@ p { font-size: 90%; }
             puts "fetching #{id} (humana press)..."
             p = m.click link
            
+          elsif link = p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i) and not link.empty?
+            puts "fetching #{id} (generic)..."
+            p = m.click link
+
           elsif link = p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i) and not link.empty?
             puts "fetching #{id} (sciencedirect)..."
             p = m.click link
             p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
           
-          elsif link = p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i) and not link.empty?
-            puts "fetching #{id} (generic)..."
-            p = m.click link
-                    
           elsif link = p.links.with.text(/pdf/i).and.href(/reprint/i) and not link.empty?
             puts "fetching #{id} (jbc)..."
             p = m.click link
