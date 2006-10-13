@@ -38,8 +38,9 @@ p { font-size: 90%; }
           p = m.click p.links.with.text(/full/i).and.href(/full/i)
           p = m.click p.links.with.href(/.pdf$/i)
           p.save_as("#{id}.pdf")
-        elsif @article.journal.strip =~ /^science$/i
-          p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
+        elsif frame = p.frames.with.name(/reprint/i)
+          p = m.click frame
+          p = m.click p.links.with.href(/.pdf$/i)
           p.save_as("#{id}.pdf")
         elsif link = p.links.with.text(/pdf/i).and.href(/.pdf$/i)
           p = m.click link
@@ -50,6 +51,7 @@ p { font-size: 90%; }
           p = m.click p.links.with.href(/.pdf$/i)
           p.save_as("#{id}.pdf")
         end
+
         render :index
       rescue
         render :error
