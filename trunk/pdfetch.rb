@@ -76,14 +76,14 @@ module Pdfetch::Views
     html do
       head do
         link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
-        script "function gopdf(){location.href=\"#{@pmid}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
+        script "function gotopdf(){location.href=\"#{@pmid}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
       self << yield
     end
   end
 
   def success
-    body :onload => 'gopdf()' do nil end
+    body :onload => 'gotopdf()' do nil end
   end
 
   def error
