@@ -42,27 +42,33 @@ p { font-size: 90%; }
         unless File.exist?("#{id}.pdf")
           m = WWW::Mechanize.new
           p = m.get("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks")
-          
-          # generic
-          if link = p.links.with.text(/pdf/i).and.href(/.pdf$/i) and not link.empty?
-            p = m.click link
-          # wiley interscience
-          elsif link = p.links.with.text(/pdf/i).and.href(/pdfstart/i) and not link.empty?
+          if link = p.links.with.text(/pdf/i).and.href(/pdfstart/i) and not link.empty?
+            puts "wiley"
             p = m.click link
             p = m.click p.frames.with.name(/main/i).and.src(/mode=pdf/i)
-          # npg
-          elsif link = p.links.with.text(/full/i).and.href(/full/i) and not link.empty?
+          elsif link = p.links.with.href(/fulltext.pdf$/i) and not link.empty?
+            puts "springerlink"
             p = m.click link
-            p = m.click p.links.with.href(/.pdf$/i)
-          # ???
-          elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
-            p = m.click frame
-            p = m.click p.links.with.href(/.pdf$/i)
-          # j neurosci, j biol chem, etc
-          else
-            p = m.click p.links.with.text(/pdf/i).and.href(/reprint/i)
+          elsif link = p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i) and not link.empty?
+            puts "cell via sciencedirect"
+            p = m.click link
+            p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
+          elsif link = p.links.with.text(/pdf/i).and.href(/reprint/i) and not link.empty?
+            puts "jbc"
+            p = m.click link
             p = m.click p.frames.with.name(/reprint/i)
             p = m.click p.links.with.href(/.pdf$/i)
+          elsif link = p.links.with.text(/full/i).and.href(/full/i) and not link.empty?
+            puts "npg"
+            p = m.click link
+            p = m.click p.links.with.href(/.pdf$/i)
+          elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
+            puts "???"
+            p = m.click frame
+            p = m.click p.links.with.href(/.pdf$/i)
+          else link = p.links.with.text(/pdf/i).and.href(/.pdf$/i) and not link.empty?
+            puts "generic"
+            p = m.click link
           end
           
           if p.content_type == "application/pdf"
