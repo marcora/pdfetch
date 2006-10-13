@@ -50,9 +50,13 @@ p { font-size: 90%; }
           elsif link = p.links.with.href(/fulltext.pdf$/i) and not link.empty?
             puts "fetching #{id} (springerlink)..."
             p = m.click link
-          
+
+          elsif link = p.links.with.href(/task=readnow/i) and not link.empty?
+            puts "fetching #{id} (humana press)..."
+            p = m.click link
+           
           elsif link = p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i) and not link.empty?
-            puts "fetching #{id} (cell via sciencedirect)..."
+            puts "fetching #{id} (sciencedirect)..."
             p = m.click link
             p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
           
