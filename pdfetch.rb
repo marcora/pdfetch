@@ -1,8 +1,11 @@
 require 'camping'
+
+require 'open-uri'
+require 'cgi'
+
 require 'bio'
 require 'hpricot'
-require 'open-uri'
-
+require 'mechanize'
 
 Camping.goes :Pdfetch
 
@@ -23,32 +26,36 @@ p { font-size: 90%; }
     end
   end
 
-  class Index < R '/(.*)'
-    def get(uri)
-#      begin
-        # extract the pmid from the uri
-        pmid = /^(\d+)$/.match(uri)
-        pmid = /list_uids=(\d+)/.match(uri) unless pmid
-        pmid = pmid[1]
-        
+  class Index < R '/(\d+)'
+    def get(id)
+      begin
         # fetch the article from pubmed using pmid
-        @article = Bio::MEDLINE.new(Bio::PubMed.query(pmid))
-        @outlinks = outlinks(pmid)
+        @article = Bio::MEDLINE.new(Bio::PubMed.query(id))
+        m = WWW::Mechanize.new
+        p = m.get("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks")
+      
+        if @article.journal.strip =~ /^nature/i
+          p = m.click p.links.with.text(/full/i).and.href(/full/i)
+          p = m.click p.links.with.href(/.pdf$/i)
+          p.save_as("#{id}.pdf")
+        elsif @article.journal.strip =~ /^science$/i
+          p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
+          p.save_as("#{id}.pdf")
+        elsif link = p.links.with.text(/pdf/i).and.href(/.pdf$/i)
+          p = m.click link
+          p.save_as("#{id}.pdf")
+        else
+          p = m.click p.links.with.text(/pdf/i).and.href(/reprint/i)
+          p = m.click p.frames.with.name(/reprint/i)
+          p = m.click p.links.with.href(/.pdf$/i)
+          p.save_as("#{id}.pdf")
+        end
         render :index
-#      rescue
-#        render :error
-#      end
-    end
-    
-    def outlinks(id)
-      uri = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=retrieve&db=pubmed&dopt=externallink&list_uids=#{id}"    
-      # load the linkout page
-      doc = Hpricot(open(uri))
-      doc.search("a.linkC").collect{|a| a.attributes['href']}
-    end
-
+      rescue
+        render :error
+      end
+    end    
   end
-
 end
 
 module Pdfetch::Views
@@ -57,21 +64,16 @@ module Pdfetch::Views
     xhtml_strict do
       head do
         link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
+        script "function waitnback(){window.setTimeout(window.history.back(),3000);}", :type => 'text/javascript'
       end
-      body do
+      body :onload => 'waitnback()' do
         self << yield
       end
     end
   end
 
   def index
-    h1 @article.title
-    p { "#{u @article.journal} #{b @article.year} #{@article.volume}(#{@article.issue}):#{@article.pages}  PMID:&nbsp;#{a @article.pmid, :href => 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=retrieve&db=pubmed&dopt=abstract&list_uids=' + @article.pmid }" }
-    p { "#{i @article.authors.join(' and ')}" } unless @article.authors.empty?
-    p @article.abstract unless @article.abstract.blank?
-    @outlinks.each do |l|
-      p l
-    end
+    p "PDFetch successfully fetched reprint from publisher."
   end
 
   def error
@@ -80,9 +82,4 @@ module Pdfetch::Views
 
 end
 
-module Pdfetch::Helpers
-end
 
-
-def Pdfetch.create
-end
