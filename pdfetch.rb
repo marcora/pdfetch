@@ -46,29 +46,31 @@ p { font-size: 90%; }
           # generic
           if link = p.links.with.text(/pdf/i).and.href(/.pdf$/i) and not link.empty?
             p = m.click link
-            p.save_as("#{id}.pdf")
           # wiley interscience
           elsif link = p.links.with.text(/pdf/i).and.href(/pdfstart/i) and not link.empty?
             p = m.click link
             p = m.click p.frames.with.name(/main/i).and.src(/mode=pdf/i)
-            p.save_as("#{id}.pdf")
           # npg
           elsif link = p.links.with.text(/full/i).and.href(/full/i) and not link.empty?
             p = m.click link
             p = m.click p.links.with.href(/.pdf$/i)
-            p.save_as("#{id}.pdf")
           # ???
           elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
             p = m.click frame
             p = m.click p.links.with.href(/.pdf$/i)
-            p.save_as("#{id}.pdf")
           # j neurosci, j biol chem, etc
           else
             p = m.click p.links.with.text(/pdf/i).and.href(/reprint/i)
             p = m.click p.frames.with.name(/reprint/i)
             p = m.click p.links.with.href(/.pdf$/i)
-            p.save_as("#{id}.pdf")
           end
+          
+          if p.content_type == "application/pdf"
+            p.save_as("#{id}.pdf")
+          else
+            raise
+          end
+        
         end
         render :success
       rescue
