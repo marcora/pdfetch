@@ -21,6 +21,12 @@ p { font-size: 90%; }
     end
   end
 
+  class Index < R '/'
+    def get
+      render :error
+    end
+  end
+  
   class Static < R '/(\d+)\.pdf$'         
     def get(id)
       @pmid = id
@@ -29,7 +35,7 @@ p { font-size: 90%; }
     end
   end 
   
-  class Index < R '/(\d+)$'
+  class Fetch < R '/(\d+)$'
     def get(id)
       @pmid = id
       begin
@@ -56,7 +62,7 @@ p { font-size: 90%; }
             p.save_as("#{id}.pdf")
           end
         end
-        render :index
+        render :success
       rescue
         render :error
       end
@@ -75,17 +81,18 @@ module Pdfetch::Views
 #      body :onload => 'waitngoback()' do
       body do
         self << yield
-        p { "Click #{a 'here', :href => '#', :onclick => 'goback()'} to go back, or click #{a "here", :href => "#{@pmid}.pdf"} to view the reprint." }
       end
     end
   end
 
-  def index
+  def success
     p "PDFetch successfully fetched reprint from publisher."
+    p { "Click #{a 'here', :href => '#', :onclick => 'goback()'} to go back, or click #{a "here", :href => "#{@pmid}.pdf"} to view the reprint." }
   end
 
   def error
     p "PDFetch cannot fetch article from PubMed or reprint from publisher. Check that the browser url is correct and that the internet connection is working."
+    p { "Click #{a 'here', :href => '#', :onclick => 'goback()'} to go back." }
   end
 
 end
