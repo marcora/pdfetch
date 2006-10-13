@@ -43,47 +43,51 @@ p { font-size: 90%; }
           m = WWW::Mechanize.new
           p = m.get("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks")
           if link = p.links.with.text(/pdf/i).and.href(/pdfstart/i) and not link.empty?
-            puts "wiley"
+            puts "fetching #{id} (wiley)..."
             p = m.click link
             p = m.click p.frames.with.name(/main/i).and.src(/mode=pdf/i)
           elsif link = p.links.with.href(/fulltext.pdf$/i) and not link.empty?
-            puts "springerlink"
+            puts "fetching #{id} (springerlink)..."
             p = m.click link
           elsif link = p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i) and not link.empty?
-            puts "cell via sciencedirect"
+            puts "fetching #{id} (cell via sciencedirect)..."
             p = m.click link
             p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
           elsif link = p.links.with.text(/pdf/i).and.href(/reprint/i) and not link.empty?
-            puts "jbc"
+            puts "fetching #{id} (jbc)..."
             p = m.click link
             p = m.click p.frames.with.name(/reprint/i)
             p = m.click p.links.with.href(/.pdf$/i)
-          elsif link = p.links.with.text(/full/i).and.href(/full/i) and not link.empty?
-            puts "npg"
+          elsif link = p.links.with.text(/full text/i).and.href(/full/i) and not link.empty?
+            puts "fetching #{id} (npg)..."
             p = m.click link
             p = m.click p.links.with.href(/.pdf$/i)
           elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
-            puts "???"
+            puts "fetching #{id} (???)..."
             p = m.click frame
             p = m.click p.links.with.href(/.pdf$/i)
-          else link = p.links.with.text(/pdf/i).and.href(/.pdf$/i) and not link.empty?
-            puts "generic"
+          else link = p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i) and not link.empty?
+            puts "fetching #{id} (generic)..."
             p = m.click link
           end
-          
-          if p.content_type == "application/pdf"
+
+          if p.kind_of? WWW::Mechanize::File
             p.save_as("#{id}.pdf")
           else
             raise
           end
         
         end
+        puts "fetching of #{id} succeeded (or reprint already in library)"
+        puts
         render :success
       rescue
-        render :error
+        puts "fetching of #{id} failed"
+        puts
+        render :failure
       end
-    end    
-  end
+    end
+  end    
 
   class Check < R '/check/(\d+)$'
     def get(id)
@@ -110,7 +114,7 @@ module Pdfetch::Views
     body :onload => 'gotopdf()' do nil end
   end
 
-  def error
+  def failure
     body :onload => 'goback()' do nil end
   end
 
