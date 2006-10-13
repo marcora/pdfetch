@@ -59,7 +59,13 @@ p { font-size: 90%; }
           elsif link = p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i) and not link.empty?
             puts "fetching #{id} (generic)..."
             p = m.click link
-
+                    
+          elsif link = p.links.with.text(/pdf/i).and.href(/reprint/i) and not link.empty?
+            puts "fetching #{id} (jbc)..."
+            p = m.click link
+            p = m.click p.frames.with.name(/reprint/i)
+            p = m.click p.links.with.href(/.pdf$/i)
+         
           elsif link = p.links.with.text(/full text/i).and.href(/full/i) and not link.empty?
             puts "fetching #{id} (npg)..."
             p = m.click link
@@ -69,14 +75,8 @@ p { font-size: 90%; }
             puts "fetching #{id} (???)..."
             p = m.click frame
             p = m.click p.links.with.href(/.pdf$/i)
-                    
-          elsif link = p.links.with.text(/pdf/i).and.href(/reprint/i) and not link.empty?
-            puts "fetching #{id} (jbc)..."
-            p = m.click link
-            p = m.click p.frames.with.name(/reprint/i)
-            p = m.click p.links.with.href(/.pdf$/i)
           end
-
+          
           if p.kind_of? WWW::Mechanize::File
             p.save_as("#{id}.pdf")
           else
