@@ -68,8 +68,10 @@ module Pdfetch::Views
         link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
         script "function goback(){window.history.back()}function waitnback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
-      body :onload => 'waitnback()' do
+#      body :onload => 'waitnback()' do
+      body do
         self << yield
+        p { "Click #{a 'here', :href => '#', :onclick => 'goback()'} to go back." }
       end
     end
   end
