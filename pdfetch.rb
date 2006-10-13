@@ -38,11 +38,11 @@ p { font-size: 90%; }
           p = m.click p.links.with.text(/full/i).and.href(/full/i)
           p = m.click p.links.with.href(/.pdf$/i)
           p.save_as("#{id}.pdf")
-        elsif frame = p.frames.with.name(/reprint/i)
+        elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
           p = m.click frame
           p = m.click p.links.with.href(/.pdf$/i)
           p.save_as("#{id}.pdf")
-        elsif link = p.links.with.text(/pdf/i).and.href(/.pdf$/i)
+        elsif link = p.links.with.text(/pdf/i).and.href(/.pdf$/i) and not link.empty?
           p = m.click link
           p.save_as("#{id}.pdf")
         else
@@ -66,7 +66,7 @@ module Pdfetch::Views
     xhtml_strict do
       head do
         link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
-        script "function waitnback(){window.setTimeout(window.history.back(),3000);}", :type => 'text/javascript'
+        script "function waitnback(){window.setTimeout(goback(),3000);}function goback(){window.history.back();}", :type => 'text/javascript'
       end
       body :onload => 'waitnback()' do
         self << yield
@@ -83,5 +83,3 @@ module Pdfetch::Views
   end
 
 end
-
-
