@@ -66,7 +66,7 @@ module Pdfetch::Views
     xhtml_strict do
       head do
         link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
-        script "function waitnback(){window.setTimeout(goback(),3000);}function goback(){window.history.back();}", :type => 'text/javascript'
+        script "function goback(){window.history.back()}function waitnback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
       body :onload => 'waitnback()' do
         self << yield
