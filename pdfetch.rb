@@ -50,15 +50,12 @@ p { font-size: 90%; }
           m = WWW::Mechanize.new
           m.pluggable_parser['application/pdf'] = Reprint
           p = m.get(@uri)
-          @uri = p.uri
           parsers = Pdfetch::Parsers.new
-          i = 0
           for parser in parsers.public_methods(false).sort
-            break if p = parsers.send(parser.to_sym, m,p)
-            puts i += 1
+            break if page = parsers.send(parser.to_sym, m,p)
           end
-          if p.kind_of? Reprint
-            p.save_as("#{id}.pdf")
+          if page.kind_of? Reprint
+            page.save_as("#{id}.pdf")
             success = true
           end
         end
