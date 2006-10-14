@@ -48,7 +48,8 @@ p { font-size: 90%; }
           success = true
         else
           m = WWW::Mechanize.new
-          m.pluggable_parser['application/pdf'] = Reprint
+          # set the mechanize pluggable parser for pdf files to the empty class Reprint, as a way to check for it later
+          m.pluggable_parser.pdf = Reprint
           p = m.get(@uri)
           parsers = Pdfetch::Parsers.new
           for parser in parsers.public_methods(false).sort
