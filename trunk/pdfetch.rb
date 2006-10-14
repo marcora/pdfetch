@@ -1,8 +1,10 @@
-
 require 'camping'
 require 'mechanize'
 
 Camping.goes :Pdfetch
+
+class Reprint < WWW::Mechanize::File    
+end
 
 module Pdfetch::Controllers
 
@@ -29,75 +31,43 @@ p { font-size: 90%; }
   
   class Static < R '/(\d+)\.pdf$'         
     def get(id)
-      @pmid = id
+      @pmid = id.to_s
       @headers['Content-Type'] = "application/pdf"
       @headers['X-Sendfile'] = "#{Dir.getwd}/#{id}.pdf"
     end
   end 
-  
 
   class Fetch < R '/fetch/(\d+)$'
     
     def get(id)
-      @pmid = id
-      @uri = nil
+      @pmid = id.to_s
+      @uri = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks"
+      success = false
       begin
-        unless File.exist?("#{id}.pdf")
+        if File.exist?("#{id}.pdf")
+          success = true
+        else
           m = WWW::Mechanize.new
-          p = m.get("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks")
+          m.pluggable_parser['application/pdf'] = Reprint
+          p = m.get(@uri)
           @uri = p.uri
-  
-          if link = p.links.with.text(/pdf/i).and.href(/pdfstart/i) and not link.empty?
-            puts "fetching #{id} (wiley)..."
-            p = m.click link
-            p = m.click p.frames.with.name(/main/i).and.src(/mode=pdf/i)
-          
-          elsif link = p.links.with.href(/fulltext.pdf$/i) and not link.empty?
-            puts "fetching #{id} (springerlink)..."
-            p = m.click link
-
-          elsif link = p.links.with.href(/task=readnow/i) and not link.empty?
-            puts "fetching #{id} (humana press)..."
-            p = m.click link
-           
-          elsif link = p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i) and not link.empty?
-            puts "fetching #{id} (generic)..."
-            p = m.click link
-
-          elsif link = p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i) and not link.empty?
-            puts "fetching #{id} (sciencedirect)..."
-            p = m.click link
-            p = m.click p.links.with.text(/pdf/i).and.href(/.pdf$/i)
-          
-          elsif link = p.links.with.text(/pdf/i).and.href(/reprint/i) and not link.empty?
-            puts "fetching #{id} (jbc)..."
-            p = m.click link
-            p = m.click p.frames.with.name(/reprint/i)
-            p = m.click p.links.with.href(/.pdf$/i)
-         
-          elsif link = p.links.with.text(/full text/i).and.href(/full/i) and not link.empty?
-            puts "fetching #{id} (npg)..."
-            p = m.click link
-            p = m.click p.links.with.href(/.pdf$/i)
-          
-          elsif frame = p.frames.with.name(/reprint/i) and not frame.empty?
-            puts "fetching #{id} (???)..."
-            p = m.click frame
-            p = m.click p.links.with.href(/.pdf$/i)
+          parsers = Pdfetch::Parsers.new
+          i = 0
+          for parser in parsers.public_methods(false).sort
+            break if p = parsers.send(parser.to_sym, m,p)
+            puts i += 1
           end
-          
-          if p.kind_of? WWW::Mechanize::File
+          if p.kind_of? Reprint
             p.save_as("#{id}.pdf")
-          else
-            raise
+            success = true
           end
-        
         end
-        puts "fetching of #{id} succeeded (or reprint already in library)"
+        raise unless success
+        puts "** fetching of reprint #{id} succeeded (or already in library)"
         puts
         render :success
       rescue
-        puts "fetching of #{id} failed"
+        puts "** fetching of reprint #{id} failed"
         puts
         render :failure
       end
@@ -130,10 +100,145 @@ module Pdfetch::Views
   end
 
   def failure
-    if @uri
-      body :onload => 'gotouri()' do nil end
-    else
-      body :onload => 'goback()' do nil end
+    body :onload => 'gotouri()' do nil end
+  end
+
+end
+
+
+class Pdfetch::Parsers
+
+  def generic(m,p)
+    begin
+      page = m.click p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'generic' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+  def nature_review(m,p)
+    begin
+      page = m.click p.frames.with.name(/navbar/i)
+      page = m.click page.links.with.href(/.pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'nature review' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+
+  def springer_link(m,p)    
+    begin
+      page = m.click p.links.with.href(/fulltext.pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'springer link' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+  def humana_press(m,p)
+    begin
+      page = m.click p.links.with.href(/task=readnow/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'humana press' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+  def wiley(m,p)
+    begin
+      page = m.click p.links.with.text(/pdf/i).and.href(/pdfstart/i)
+      page = m.click page.frames.with.name(/main/i).and.src(/mode=pdf/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'wiley' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+  def science_direct(m,p)
+    begin
+      page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
+      page = m.click page.links.with.text(/pdf/i).and.href(/.pdf$/i)
+      if p.kind_of? Reprint
+        puts "** fetching reprint using the 'science direct' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end          
+
+  def jbc(m,p)
+    begin
+      page = m.click p.links.with.text(/pdf/i).and.href(/reprint/i)
+      page = m.click page.frames.with.name(/reprint/i)
+      page = m.click page.links.with.href(/.pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'jbc' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+         
+  def nature(m,p)
+    begin
+      page = m.click p.links.with.text(/full text/i).and.href(/full/i)
+      page = m.click page.links.with.href(/.pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'nature' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+  def unknown(m,p)
+    begin
+      page = m.click p.frames.with.name(/reprint/i)
+      page = m.click page.links.with.href(/.pdf$/i)
+      if p.kind_of? Reprint
+        puts "** fetching reprint using the 'unknown' parser..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
     end
   end
 
