@@ -51,9 +51,9 @@ p { font-size: 90%; }
           # set the mechanize pluggable parser for pdf files to the empty class Reprint, as a way to check for it later
           m.pluggable_parser.pdf = Reprint
           p = m.get(@uri)
-          parsers = Pdfetch::Parsers.new
-          for parser in parsers.public_methods(false).sort
-            break if page = parsers.send(parser.to_sym, m,p)
+          finders = Pdfetch::Finders.new
+          for finder in finders.public_methods(false).sort
+            break if page = finders.send(finder.to_sym, m,p)
           end
           if page.kind_of? Reprint
             page.save_as("#{id}.pdf")
@@ -104,7 +104,7 @@ module Pdfetch::Views
 end
 
 
-class Pdfetch::Parsers
+class Pdfetch::Finders
 
   def generic(m,p)
     begin
