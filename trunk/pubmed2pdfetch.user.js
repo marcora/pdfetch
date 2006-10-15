@@ -47,7 +47,7 @@ function insertPubmed2Pdfetch(){
 	
             var a = document.createElement("a");
             a.setAttribute("title","Fetch the reprint of this article using PDFetch");
-            a.setAttribute("href","http://localhost:8888/fetch/"+pmid);
+            a.setAttribute("href","http://localhost:3301/fetch/"+pmid);
             a.setAttribute("class","dblinks");
     
             var anchor = document.createTextNode("Fetch");
