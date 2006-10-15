@@ -21,7 +21,7 @@
 // ==UserScript==
 // @name          pubmed2pdfetch
 // @namespace     http://edoardo.marcora.net/
-// @description   Append a 'Download' link when browsing PubMed.
+// @description   Append a 'Fetch' link to pdfetch when browsing PubMed.
 // @include       http://www.ncbi.nlm.nih.gov/entrez/*
 // ==/UserScript==
 
@@ -46,11 +46,11 @@ function insertPubmed2Pdfetch(){
             var pmid = re.exec(html)[1]; 
 	
             var a = document.createElement("a");
-            a.setAttribute("title","Download reprint of this article using PDFetch");
+            a.setAttribute("title","Fetch the reprint of this article using PDFetch");
             a.setAttribute("href","http://localhost:8888/fetch/"+pmid);
             a.setAttribute("class","dblinks");
     
-            var anchor = document.createTextNode("Download");
+            var anchor = document.createTextNode("Fetch");
     
             a.appendChild(anchor);
 
