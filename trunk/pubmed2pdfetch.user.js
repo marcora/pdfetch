@@ -24,80 +24,43 @@
 // @include       http://www.ncbi.nlm.nih.gov/entrez/*
 // ==/UserScript==
 
-
-
-
-function gm_xpath(expression,contextNode){
-    return document.evaluate(expression,contextNode,null,XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,null);
-}
-
-function getURLParameter(url,parameter){
-    if(url==null) return null;
-    var a= url.indexOf("?");
-    if(a==-1) return null;
-    if(url.indexOf(parameter+"=")==-1) return null;
-    var params= url.substring(a+1).split("&");
-    var i=0;
-    for(i=0;i<params.length;i++)
-        {
-            b= params[i].indexOf("=");
-            if(b==-1) continue;
-            var key = params[i].substring(0,b);
-            if(key!=parameter) continue;
-            return params[i].substring(b+1);
-        }
-    return null;
-}
-
-function escapeURL(url){
-    var s="";
-    var i=0;
-
-    for(i=0;i< url.length;++i)
-        {
-            var c=url.charAt(i)
-                switch( c )
-                    {
-                    case ':': s+= '%3A'; break;
-                    case '/': s+= '%2F'; break;
-                    case '?': s+= '%3F'; break;
-                    case '=': s+= '%3D'; break;
-                    case '&': s+= '%26'; break;
-                    default : s+= c; break;
-                    }
-        }
-    return s;
-}
-
-
 function insertPubmed2Pdfetch(){
 
-    var pmid = '';
-    var re = /PMID:\s+(\d+)\s+/;
-    var html = document.body.innerHTML;
-    var pos = html.search(re);
-    
-    if (pos>=0){
+    var html = document.evaluate("//p[@class='pmid']",
+                                 document.body,
+                                 null,
+                                 XPathResult.FIRST_ORDERED_NODE_TYPE,
+                                 null).singleNodeValue;
 
-        pmid =re.exec(html)[1]; 
+    if (html != null){
+
+        html = html.innerHTML;
+
+        var re = /PMID:\s+(\d+)\s+/;
+
+        var pos = html.search(re);
+    
+        if (pos >= 0){
+
+            var pmid = re.exec(html)[1]; 
 	
-        var a = document.createElement("a");
-        a.setAttribute("title","Download reprint of this article using PDFetch");
-        a.setAttribute("href","http://localhost:8888/fetch/"+pmid);
-        a.setAttribute("class","dblinks");
+            var a = document.createElement("a");
+            a.setAttribute("title","Download reprint of this article using PDFetch");
+            a.setAttribute("href","http://localhost:8888/fetch/"+pmid);
+            a.setAttribute("class","dblinks");
     
-        var anchor = document.createTextNode("Download");
+            var anchor = document.createTextNode("Download");
     
-        a.appendChild(anchor);
+            a.appendChild(anchor);
 
-        var e = document.evaluate(
-                                  "//span[@class='linkbar']",
-                                  document.body,
-                                  null,
-                                  XPathResult.FIRST_ORDERED_NODE_TYPE,
-                                  null).singleNodeValue;
+            var linkbar = document.evaluate("//span[@class='linkbar']",
+                                            document.body,
+                                            null,
+                                            XPathResult.FIRST_ORDERED_NODE_TYPE,
+                                            null).singleNodeValue;
 
-        e.appendChild(a);
+            if (linkbar != null){ linkbar.appendChild(a); }
+        }
     }
 }
 
