@@ -6,22 +6,8 @@ Camping.goes :Pdfetch
 class Reprint < WWW::Mechanize::File    
 end
 
+
 module Pdfetch::Controllers
-
-  class MainCss < R '/main.css'
-    def get
-      @headers["Content-Type"] = "text/css; charset=utf-8"
-      @body = %{
-
-/* main.css */
-body { margin: 0; padding: 10; font-size: medium; font-family: arial, sans; }
-a { text-decoration: none;}
-h1 { font-size: 110%; }
-p { font-size: 90%; }
-
-}
-    end
-  end
 
   class Index < R '/'
     def get
@@ -37,8 +23,7 @@ p { font-size: 90%; }
     end
   end 
 
-  class Fetch < R '/fetch/(\d+)$'
-    
+  class Fetch < R '/fetch/(\d+)$'    
     def get(id)
       @pmid = id.to_s
       @uri = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks"
@@ -86,7 +71,6 @@ module Pdfetch::Views
   def layout
     html do
       head do
-#        link :rel => 'stylesheet', :type => 'text/css', :href => '/main.css', :media => 'screen'
         script "function gotouri(){location.href=\"#{@uri}\";} function gotopdf(){location.href=\"/#{@pmid}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
       self << yield
@@ -134,7 +118,6 @@ class Pdfetch::Finders
       return nil
     end
   end
-
 
   def springer_link(m,p)    
     begin
