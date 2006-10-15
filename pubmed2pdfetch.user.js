@@ -1,26 +1,27 @@
 // pubmed2pdfetch
-// version 0.1
+// version 0.2
 // 2006-10-15
 // Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D. <http://marcora.caltech.edu/>
 // Released under the MIT license <http://www.opensource.org/licenses/mit-license.php>
 // --------------------------------------------------------------------
 //
-// This is a Greasemonkey user script.  To install it, you need
-// Greasemonkey 0.6.4 or later: http://greasemonkey.mozdev.org/
-// and Firefox 1.5 : http://www.mozilla.com/
-// Then restart Firefox and revisit this script.
-// Under Tools, there will be a new menu item to "Install User Script".
-// Accept the default configuration and install.
+// This is a Greasemonkey user script.
 //
-// To uninstall, go to Tools/Manage User Scripts,
-// select "pubmed2connotea", and click Uninstall.
+// This script works by extending Firefox <http://www.mozilla.com/>
+// via Greasemonkey <http://greasemonkey.mozdev.org/>.
+//
+// To install this script, open it in Firefox+Greasemonkey and click
+// Install.
+//
+// To uninstall, go to Tools/Manage User Scripts, select
+// "pubmed2pdfetch", and click Uninstall.
 //
 // --------------------------------------------------------------------
 
 // ==UserScript==
-// @name          pubmed2connotea
-// @namespace     http://www.integragen.com
-// @description   append a shortcut link used to add an entry in http://www.connotea.org or http://www.citeulike.org/ when browsing NCBI pubmed
+// @name          pubmed2pdfetch
+// @namespace     http://edoardo.marcora.net/
+// @description   Append a 'Download' link when browsing PubMed.
 // @include       http://www.ncbi.nlm.nih.gov/entrez/*
 // ==/UserScript==
 
