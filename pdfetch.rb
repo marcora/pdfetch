@@ -1,3 +1,15 @@
+## pdfetch
+## version 0.3
+## 2006-10-16
+## Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D. <http://marcora.caltech.edu/>
+## Released under the MIT license <http://www.opensource.org/licenses/mit-license.php>
+## --------------------------------------------------------------------
+##
+## This is a Camping web app that automagically fetches a PDF reprint
+## of a PubMed article given its PMID.
+##
+## --------------------------------------------------------------------
+
 require 'camping'
 require 'mechanize'
 
@@ -165,7 +177,7 @@ class Pdfetch::Finders
   def science_direct(m,p)
     begin
       page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
-      page = m.click page.links.with.text(/pdf/i).and.href(/.pdf$/i)
+      page = m.click page.links.with.href(/sdarticle.pdf$/i)
       if page.kind_of? Reprint
         puts "** fetching reprint using the 'science direct' parser..."
         return page
