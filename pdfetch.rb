@@ -183,7 +183,7 @@ class Pdfetch::Parsers
     begin
       page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
       page = m.click page.links.with.text(/pdf/i).and.href(/.pdf$/i)
-      if p.kind_of? Reprint
+      if page.kind_of? Reprint
         puts "** fetching reprint using the 'science direct' parser..."
         return page
       else
@@ -229,7 +229,7 @@ class Pdfetch::Parsers
     begin
       page = m.click p.frames.with.name(/reprint/i)
       page = m.click page.links.with.href(/.pdf$/i)
-      if p.kind_of? Reprint
+      if page.kind_of? Reprint
         puts "** fetching reprint using the 'unknown' parser..."
         return page
       else
