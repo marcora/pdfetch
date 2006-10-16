@@ -1,8 +1,13 @@
 // pubmed2pdfetch
-// version 0.2
+// v0.2
 // 2006-10-15
-// Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D. <http://marcora.caltech.edu/>
-// Released under the MIT license <http://www.opensource.org/licenses/mit-license.php>
+//
+// Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D.
+// <http://marcora.caltech.edu/>
+//
+// Released under the MIT license
+// <http://www.opensource.org/licenses/mit-license.php>
+//
 // --------------------------------------------------------------------
 //
 // This is a Greasemonkey user script.
