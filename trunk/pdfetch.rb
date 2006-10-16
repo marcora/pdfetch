@@ -46,7 +46,7 @@ module Pdfetch::Controllers
       @uri = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks"
       success = false
       begin
-        if File.exist?("#{id}.pdf") # bypass finders if pdf reprint already in library
+        if File.exist?("#{id}.pdf") # bypass finders if pdf reprint already stored locally
           success = true
         else
           m = WWW::Mechanize.new
@@ -65,7 +65,7 @@ module Pdfetch::Controllers
           end
         end
         raise unless success
-        puts "** fetching of reprint #{id} succeeded (or already in library)"
+        puts "** fetching of reprint #{id} succeeded"
         puts
         render :success
       rescue
@@ -169,6 +169,21 @@ class Pdfetch::Finders
     end
   end
 
+  def blackwell_synergy(m,p)
+    begin
+      raise unless p.uri =~ /blackwell-synergy/i
+      page = m.click p.links.with.href(/doi\/pdf/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'blackwell synergy' finder..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+  
   def wiley(m,p)
     begin
       page = m.click p.links.with.text(/pdf/i).and.href(/pdfstart/i)
