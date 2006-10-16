@@ -21,8 +21,8 @@ require 'mechanize'
 Camping.goes :Pdfetch
 
 class Reprint < WWW::Mechanize::File    
+  # empty class to use as Mechanize pluggable parser for pdf files
 end
-
 
 module Pdfetch::Controllers
 
@@ -46,14 +46,16 @@ module Pdfetch::Controllers
       @uri = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks"
       success = false
       begin
-        if File.exist?("#{id}.pdf")
+        if File.exist?("#{id}.pdf") # bypass finders if pdf reprint already in library
           success = true
         else
           m = WWW::Mechanize.new
           # set the mechanize pluggable parser for pdf files to the empty class Reprint, as a way to check for it later
           m.pluggable_parser.pdf = Reprint
           p = m.get(@uri)
+          @uri = p.uri
           finders = Pdfetch::Finders.new
+          # loop through all finders until it finds one that return the pdf reprint
           for finder in finders.public_methods(false).sort
             break if page = finders.send(finder.to_sym, m,p)
           end
@@ -106,6 +108,9 @@ end
 
 
 class Pdfetch::Finders
+  # Finders are functions used to find the pdf reprint off a publisher's website.
+  # Pass a finder the mechanize agent (m) and the pubmed linkout page (p), and
+  # it will return either the pdf reprint or nil.
 
   def generic(m,p)
     begin
@@ -180,6 +185,7 @@ class Pdfetch::Finders
   end
 
   def science_direct(m,p)
+    # this one doesn't work yet!
     begin
       page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
       page = m.click page.links.with.href(/sdarticle.pdf$/i)
