@@ -116,7 +116,7 @@ class Pdfetch::Finders
     begin
       page = m.click p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'generic' parser..."
+        puts "** fetching reprint using the 'generic' finder..."
         return page
       else
         return nil
@@ -131,7 +131,7 @@ class Pdfetch::Finders
       page = m.click p.frames.with.name(/navbar/i)
       page = m.click page.links.with.href(/.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'nature review' parser..."
+        puts "** fetching reprint using the 'nature review' finder..."
         return page
       else
         return nil
@@ -145,7 +145,7 @@ class Pdfetch::Finders
     begin
       page = m.click p.links.with.href(/fulltext.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'springer link' parser..."
+        puts "** fetching reprint using the 'springer link' finder..."
         return page
       else
         return nil
@@ -159,7 +159,7 @@ class Pdfetch::Finders
     begin
       page = m.click p.links.with.href(/task=readnow/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'humana press' parser..."
+        puts "** fetching reprint using the 'humana press' finder..."
         return page
       else
         return nil
@@ -174,7 +174,7 @@ class Pdfetch::Finders
       page = m.click p.links.with.text(/pdf/i).and.href(/pdfstart/i)
       page = m.click page.frames.with.name(/main/i).and.src(/mode=pdf/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'wiley' parser..."
+        puts "** fetching reprint using the 'wiley' finder..."
         return page
       else
         return nil
@@ -190,7 +190,7 @@ class Pdfetch::Finders
       page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
       page = m.click page.links.with.href(/sdarticle.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'science direct' parser..."
+        puts "** fetching reprint using the 'science direct' finder..."
         return page
       else
         return nil
@@ -206,7 +206,7 @@ class Pdfetch::Finders
       page = m.click page.frames.with.name(/reprint/i)
       page = m.click page.links.with.href(/.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'jbc' parser..."
+        puts "** fetching reprint using the 'jbc' finder..."
         return page
       else
         return nil
@@ -221,7 +221,7 @@ class Pdfetch::Finders
       page = m.click p.links.with.text(/full text/i).and.href(/full/i)
       page = m.click page.links.with.href(/.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'nature' parser..."
+        puts "** fetching reprint using the 'nature' finder..."
         return page
       else
         return nil
@@ -236,7 +236,7 @@ class Pdfetch::Finders
       page = m.click p.frames.with.name(/reprint/i)
       page = m.click page.links.with.href(/.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'unknown' parser..."
+        puts "** fetching reprint using the 'unknown' finder..."
         return page
       else
         return nil
