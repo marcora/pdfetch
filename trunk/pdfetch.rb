@@ -171,7 +171,6 @@ class Pdfetch::Finders
 
   def blackwell_synergy(m,p)
     begin
-      raise unless p.uri =~ /blackwell-synergy/i
       page = m.click p.links.with.href(/doi\/pdf/i)
       if page.kind_of? Reprint
         puts "** fetching reprint using the 'blackwell synergy' finder..."
@@ -200,7 +199,6 @@ class Pdfetch::Finders
   end
 
   def science_direct(m,p)
-    # this one doesn't work yet!
     begin
       page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
       page = m.click page.links.with.href(/sdarticle.pdf$/i)
