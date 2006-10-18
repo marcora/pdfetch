@@ -244,6 +244,20 @@ class Pdfetch::Finders
     end
   end
 
+  def ingenta_connect(m,p)
+    begin
+      page = m.click p.links.with.href(/mimetype=.*pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'ingenta connect' finder..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
   def unknown(m,p)
     begin
       page = m.click p.frames.with.name(/reprint/i)
