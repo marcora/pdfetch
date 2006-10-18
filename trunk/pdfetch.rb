@@ -201,9 +201,24 @@ class Pdfetch::Finders
   def science_direct(m,p)
     begin
       page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
-      page = m.click page.links.with.href(/sdarticle.pdf$/i)
+      page = m.click page.links.with.href(/sdarticle\.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'science direct' finder..."
+        puts "** fetching reprint using the 'cell press' finder..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end          
+  
+  def cell_press(m,p)
+    begin
+      page = m.click p.links.with.text(/cell|cancer cell|developmental cell|molecular cell|neuron|structure|immunity|chemistry.+biology|cell metabolism|current biology/i).and.href(/cancercell|cell|developmentalcell|immunity|molecule|structure|current-biology|cellmetabolism|neuron|chembiol/i)
+      page = m.click page.links.with.text(/pdf/i).and.href(/\.pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'cell press' finder..."
         return page
       else
         return nil
