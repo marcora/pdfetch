@@ -126,21 +126,6 @@ class Pdfetch::Finders
     end
   end
 
-  def nature_review(m,p)
-    begin
-      page = m.click p.frames.with.name(/navbar/i)
-      page = m.click page.links.with.href(/.pdf$/i)
-      if page.kind_of? Reprint
-        puts "** fetching reprint using the 'nature review' finder..."
-        return page
-      else
-        return nil
-      end
-    rescue
-      return nil
-    end
-  end
-
   def springer_link(m,p)    
     begin
       page = m.click p.links.with.href(/fulltext.pdf$/i)
@@ -213,6 +198,20 @@ class Pdfetch::Finders
     end
   end          
   
+  def ingenta_connect(m,p)
+    begin
+      page = m.click p.links.with.href(/mimetype=.*pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'ingenta connect' finder..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
   def cell_press(m,p)
     begin
       page = m.click p.links.with.text(/cell|cancer cell|developmental cell|molecular cell|neuron|structure|immunity|chemistry.+biology|cell metabolism|current biology/i).and.href(/cancercell|cell|developmentalcell|immunity|molecule|structure|current-biology|cellmetabolism|neuron|chembiol/i)
@@ -259,11 +258,27 @@ class Pdfetch::Finders
     end
   end
 
-  def ingenta_connect(m,p)
+  def nature_reviews(m,p)
     begin
-      page = m.click p.links.with.href(/mimetype=.*pdf$/i)
+      page = m.click p.frames.with.name(/navbar/i)
+      page = m.click page.links.with.href(/.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'ingenta connect' finder..."
+        puts "** fetching reprint using the 'nature reviews' finder..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+  def pubmed_central(m,p)
+    begin
+      # raise unless p.uri =~ /pubmedcentral/i
+      page = m.click p.links.with.text(/pdf/i).and.href(/blobtype=pdf/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'pubmed central' finder..."
         return page
       else
         return nil
