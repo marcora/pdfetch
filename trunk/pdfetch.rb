@@ -15,6 +15,8 @@
 ##
 ## --------------------------------------------------------------------
 
+require 'uri'
+
 require 'camping'
 require 'mechanize'
 
@@ -156,7 +158,8 @@ class Pdfetch::Finders
 
   def blackwell_synergy(m,p)
     begin
-      page = m.click p.links.with.href(/doi\/pdf/i)
+      return nil unless p.uri.to_s =~ /\/doi\/abs\//i
+      page = m.get(p.uri.to_s.sub('abs', 'pdf'))
       if page.kind_of? Reprint
         puts "** fetching reprint using the 'blackwell synergy' finder..."
         return page
