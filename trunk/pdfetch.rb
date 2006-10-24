@@ -218,7 +218,13 @@ class Pdfetch::Finders
   def cell_press(m,p)
     begin
       page = m.click p.links.with.text(/cell|cancer cell|developmental cell|molecular cell|neuron|structure|immunity|chemistry.+biology|cell metabolism|current biology/i).and.href(/cancercell|cell|developmentalcell|immunity|molecule|structure|current-biology|cellmetabolism|neuron|chembiol/i)
-      page = m.click page.links.with.text(/pdf/i).and.href(/\.pdf$/i)
+      uid = /uid=(.+)/i.match(page.uri.to_s)
+      if uid
+        re = Regexp.new(uid[1])
+        page = m.click page.links.with.text(/pdf/i).and.href(re)
+      else
+        page = m.click page.links.with.text(/pdf \(\d+K\)/i).and.href(/\.pdf$/i)
+      end
       if page.kind_of? Reprint
         puts "** fetching reprint using the 'cell press' finder..."
         return page
