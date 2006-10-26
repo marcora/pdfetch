@@ -63,6 +63,7 @@ module Pdfetch::Models
         source = pmarticle.source
         abstract = pmarticle.abstract
         mesh = pmarticle.mesh.join("\n")
+        content = IO.popen("pdftotext #{id}.pdf -enc ASCII7 -").read
         # extract content here
         index << {
           :id => id.to_s,
@@ -72,7 +73,9 @@ module Pdfetch::Models
           :year => year,
           :source => source,
           :abstract => abstract,
-          :mesh => mesh }
+          :mesh => mesh,
+          :content => content,
+        }
         index.flush
         article = index[id.to_s]
         index.close # to avoid locking!
@@ -99,16 +102,16 @@ module Pdfetch::Models
             self.find_or_create(id)
             fs_ids << id
             unless indexed_ids.include? id
-              puts "** #{filename} was successfully indexed"
+              puts "** file #{filename} was successfully indexed"
             end
           rescue
-            puts "** error indexing #{filename}"
+            puts "** error indexing file #{filename}"
           end
         end
       end
       for id in (self.indexed_ids() - fs_ids)
         self.destroy(id.to_s)
-        puts "** #{id} was successfully unindexed"
+        puts "** reprint #{id} was successfully unindexed"
       end
       puts
     end
@@ -224,6 +227,13 @@ module Pdfetch::Views
   def layout
     html do
       head do
+        style <<-END, :type => 'text/css'
+body {margin: 0; padding: 20px; font-size: medium; font-family: arial, sans-serif; }
+div.article {margin-bottom: 20px; padding: 10px; color: #333; background: #f6f6f6; }
+p.title {margin: 0; padding: 0; font-size: 115%; font-weight: bold; }
+p.authors {font-style: italic; font-size: 95%; }
+p.abstract {font-size: 85%; margin-bottom: 0; }
+END
         script "function gotouri(){location.href=\"#{@uri}\";} function gotopdf(){location.href=\"/#{@id}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
       self << yield
@@ -245,14 +255,14 @@ module Pdfetch::Views
   end
   
   def _article(article)
-    body :style => "color: #333; font-family: arial, verdana, sans; font-size: medium;" do
-      p article[:title], :style => "font-size: 110%; font-weight: bold; margin-top: 2em;"
-      p do
+    div.article do
+      p.title article[:title]
+      p.authors article[:authors]
+      p.source do
         text article[:source] + "&nbsp;"
         a article[:id], :href => "/fetch/#{article[:id]}"
       end
-      p article[:authors], :style => "font-style: italic; font-size: 95%;"
-      p article[:abstract], :style => "font-size: 90%;"
+      p.abstract article[:abstract]
     end
   end
   
@@ -486,6 +496,8 @@ end
 
 def Pdfetch.create
   unless $index_is_refreshed
+    puts
+    puts "** Camping updating/creating search index."
     Pdfetch::Models::Article.refresh_index()
     $index_is_refreshed = true
   end
