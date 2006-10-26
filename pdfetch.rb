@@ -1,6 +1,6 @@
 ## pdfetch
-## v0.3
-## 2006-10-16
+## v0.4
+## 2006-10-25
 ##
 ## Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D.
 ## <http://marcora.caltech.edu/>
@@ -15,15 +15,143 @@
 ##
 ## --------------------------------------------------------------------
 
-require 'uri'
-
+require 'ferret'
 require 'camping'
 require 'mechanize'
+require 'uri'
+require 'bio'
+
+include Ferret
+include Bio
 
 Camping.goes :Pdfetch
 
 class Reprint < WWW::Mechanize::File    
   # empty class to use as Mechanize pluggable parser for pdf files
+end
+
+
+module Pdfetch::Models
+  
+  class Article
+    
+    def self.search(query)
+      articles = []
+      index = self.get_index()
+      index.search_each(query, :limit => :all) do |id, score|
+        articles << index[id]
+      end
+      return articles
+    end
+  
+    def self.destroy(id)
+      index = self.get_index()
+      index.delete(id.to_s)
+      index.close
+    end
+
+    def self.find_or_create(id)
+      index = self.get_index()
+      unless article = index[id.to_s]
+        # fetch article data from PubMed
+        pmarticle = MEDLINE.new(PubMed.query(id))
+        raise if id.to_s != pmarticle.pmid
+        title = pmarticle.title
+        authors = pmarticle.authors.join(" and ")
+        journal = pmarticle.journal
+        year = pmarticle.year
+        source = pmarticle.source
+        abstract = pmarticle.abstract
+        mesh = pmarticle.mesh.join("\n")
+        # extract content here
+        index << {
+          :id => id.to_s,
+          :title => title,
+          :authors => authors,
+          :journal => journal,
+          :year => year,
+          :source => source,
+          :abstract => abstract,
+          :mesh => mesh }
+        index.flush
+        article = index[id.to_s]
+        index.close # to avoid locking!
+      end
+      return article
+    end
+
+    def self.indexed_ids()
+      ids = []
+      index = get_index()
+      index.search_each(Search::MatchAllQuery.new, :limit => :all) do |id, score|
+        ids << index[id][:id]
+      end
+      return ids
+    end
+    
+    def self.refresh_index
+      fs_ids = []
+      indexed_ids = self.indexed_ids()
+      Dir.glob("*.pdf") do |filename|
+        if id = /^(\d+)\.pdf$/i.match(filename)
+          id = id[1]
+          begin
+            self.find_or_create(id)
+            fs_ids << id
+            unless indexed_ids.include? id
+              puts "** #{filename} was successfully indexed"
+            end
+          rescue
+            puts "** error indexing #{filename}"
+          end
+        end
+      end
+      for id in (self.indexed_ids() - fs_ids)
+        self.destroy(id.to_s)
+        puts "** #{id} was successfully unindexed"
+      end
+      puts
+    end
+    
+    
+    private
+    
+    def self.get_index()
+      index = Index::Index.new(:default_input_field => nil,
+                               :default_field => '*',
+                               :id_field => 'id',
+                               :key => 'id',
+                               :auto_flush => true,
+                               :create_if_missing => true,
+                               :path => './index')
+      fis = index.field_infos
+      unless fis[:title]
+        fis.add_field(:id,
+                      :index => :untokenized,
+                      :term_vector => :no)
+  
+        fis.add_field(:title, :boost => 10.0)
+        fis.add_field(:mesh, :boost => 10.0, :term_vector => :no)
+        fis.add_field(:abstract, :boost => 10.0)
+        fis.add_field(:authors, :term_vector => :no)
+  
+        fis.add_field(:year,
+                      :index => :untokenized,
+                      :term_vector => :no)
+      
+        fis.add_field(:journal,
+                      :index => :untokenized,
+                      :term_vector => :no)
+        
+        fis.add_field(:source,
+                      :index => :no,
+                      :term_vector => :no)
+        
+        fis.add_field(:content, :store => :no)
+      end
+      return index
+    end
+  end
 end
 
 module Pdfetch::Controllers
@@ -36,7 +164,7 @@ module Pdfetch::Controllers
   
   class Static < R '/(\d+)\.pdf$'         
     def get(id)
-      @pmid = id.to_s
+      @id = id.to_s
       @headers['Content-Type'] = "application/pdf"
       @headers['X-Sendfile'] = "#{Dir.getwd}/#{id}.pdf"
     end
@@ -44,7 +172,7 @@ module Pdfetch::Controllers
 
   class Fetch < R '/fetch/(\d+)$'    
     def get(id)
-      @pmid = id.to_s
+      @id = id.to_s
       @uri = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks"
       success = false
       begin
@@ -63,24 +191,28 @@ module Pdfetch::Controllers
           end
           if page.kind_of? Reprint
             page.save_as("#{id}.pdf")
+            Article.find_or_create(id)
             success = true
           end
         end
         raise unless success
         puts "** fetching of reprint #{id} succeeded"
-        puts
         render :success
       rescue
         puts "** fetching of reprint #{id} failed"
-        puts
         render :failure
       end
     end
   end    
 
-  class Check < R '/check/(\d+)$'
-    def get(id)
-      return File.exist?("#{id}.pdf")
+  class Search < R '/search'    
+    def get
+      if input.q
+        @articles = Article.search(input.q)
+        render :search_results
+      else
+        render :search_form
+      end
     end
   end
 
@@ -92,7 +224,7 @@ module Pdfetch::Views
   def layout
     html do
       head do
-        script "function gotouri(){location.href=\"#{@uri}\";} function gotopdf(){location.href=\"/#{@pmid}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
+        script "function gotouri(){location.href=\"#{@uri}\";} function gotopdf(){location.href=\"/#{@id}.pdf\";} function goback(){window.history.back()} function waitngoback(){window.setTimeout(goback(),3000);}", :type => 'text/javascript'
       end
       self << yield
     end
@@ -104,6 +236,44 @@ module Pdfetch::Views
 
   def failure
     body :onload => 'gotouri()' do nil end
+  end
+
+  def show
+    body do
+      _article(@article)
+    end
+  end
+  
+  def _article(article)
+    body :style => "color: #333; font-family: arial, verdana, sans; font-size: medium;" do
+      p article[:title], :style => "font-size: 110%; font-weight: bold; margin-top: 2em;"
+      p do
+        text article[:source] + "&nbsp;"
+        a article[:id], :href => "/fetch/#{article[:id]}"
+      end
+      p article[:authors], :style => "font-style: italic; font-size: 95%;"
+      p article[:abstract], :style => "font-size: 90%;"
+    end
+  end
+  
+  def search_results
+    body do
+      for article in @articles
+        _article(article)
+      end
+    end
+  end
+
+  def search_form
+    body :onload => "document.forms[0][0].focus();" do
+      center :style => "margin-top: 2em;" do
+        form do
+          input :type => 'text', :name => 'q'
+          text "&nbsp;"
+          input :type => 'submit', :value => 'Search'
+        end
+      end
+    end
   end
 
 end
@@ -312,4 +482,11 @@ class Pdfetch::Finders
     end
   end
 
+end
+
+def Pdfetch.create
+  unless $index_is_refreshed
+    Pdfetch::Models::Article.refresh_index()
+    $index_is_refreshed = true
+  end
 end
