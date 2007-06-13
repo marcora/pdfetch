@@ -26,15 +26,15 @@ include Bio
 
 Camping.goes :Pdfetch
 
-class Reprint < WWW::Mechanize::File    
+class Reprint < WWW::Mechanize::File
   # empty class to use as Mechanize pluggable parser for pdf files
 end
 
 
 module Pdfetch::Models
-  
+
   class Article
-    
+
     def self.search(query)
       articles = []
       index = self.get_index()
@@ -43,7 +43,7 @@ module Pdfetch::Models
       end
       return articles
     end
-  
+
     def self.destroy(id)
       index = self.get_index()
       index.delete(id.to_s)
@@ -54,7 +54,7 @@ module Pdfetch::Models
       index = self.get_index()
       unless article = index[id.to_s]
         # fetch article data from PubMed
-        pmarticle = MEDLINE.new(PubMed.query(id))
+        pmarticle = MEDLINE.new(PubMed.pmfetch(id))
         raise if id.to_s != pmarticle.pmid
         title = pmarticle.title
         authors = pmarticle.authors.join(" and ")
@@ -91,7 +91,7 @@ module Pdfetch::Models
       end
       return ids
     end
-    
+
     def self.refresh_index
       fs_ids = []
       indexed_ids = self.indexed_ids()
@@ -115,10 +115,10 @@ module Pdfetch::Models
       end
       puts
     end
-    
-    
+
+
     private
-    
+
     def self.get_index()
       index = Index::Index.new(:default_input_field => nil,
                                :default_field => '*',
@@ -132,24 +132,24 @@ module Pdfetch::Models
         fis.add_field(:id,
                       :index => :untokenized,
                       :term_vector => :no)
-  
+
         fis.add_field(:title, :boost => 10.0)
         fis.add_field(:mesh, :boost => 10.0, :term_vector => :no)
         fis.add_field(:abstract, :boost => 10.0)
         fis.add_field(:authors, :term_vector => :no)
-  
+
         fis.add_field(:year,
                       :index => :untokenized,
                       :term_vector => :no)
-      
+
         fis.add_field(:journal,
                       :index => :untokenized,
                       :term_vector => :no)
-        
+
         fis.add_field(:source,
                       :index => :no,
                       :term_vector => :no)
-        
+
         fis.add_field(:content, :store => :no)
       end
       return index
@@ -164,16 +164,16 @@ module Pdfetch::Controllers
       redirect "http://code.google.com/p/pdfetch/"
     end
   end
-  
-  class Static < R '/(\d+)\.pdf$'         
+
+  class Static < R '/(\d+)\.pdf$'
     def get(id)
       @id = id.to_s
       @headers['Content-Type'] = "application/pdf"
       @headers['X-Sendfile'] = "#{Dir.getwd}/#{id}.pdf"
     end
-  end 
+  end
 
-  class Fetch < R '/fetch/(\d+)$'    
+  class Fetch < R '/fetch/(\d+)$'
     def get(id)
       @id = id.to_s
       @uri = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks"
@@ -206,9 +206,9 @@ module Pdfetch::Controllers
         render :failure
       end
     end
-  end    
+  end
 
-  class Search < R '/search'    
+  class Search < R '/search'
     def get
       if input.q
         @articles = Article.search(input.q)
@@ -221,7 +221,7 @@ module Pdfetch::Controllers
 
 end
 
-  
+
 module Pdfetch::Views
 
   def layout
@@ -253,7 +253,7 @@ END
       _article(@article)
     end
   end
-  
+
   def _article(article)
     div.article do
       p.title article[:title]
@@ -265,7 +265,7 @@ END
       p.abstract article[:abstract]
     end
   end
-  
+
   def search_results
     body do
       for article in @articles
@@ -308,7 +308,7 @@ class Pdfetch::Finders
     end
   end
 
-  def springer_link(m,p)    
+  def springer_link(m,p)
     begin
       page = m.click p.links.with.href(/fulltext.pdf$/i)
       if page.kind_of? Reprint
@@ -350,7 +350,7 @@ class Pdfetch::Finders
       return nil
     end
   end
-  
+
   def wiley(m,p)
     begin
       page = m.click p.links.with.text(/pdf/i).and.href(/pdfstart/i)
@@ -379,8 +379,8 @@ class Pdfetch::Finders
     rescue
       return nil
     end
-  end          
-  
+  end
+
   def ingenta_connect(m,p)
     begin
       page = m.click p.links.with.href(/mimetype=.*pdf$/i)
@@ -414,7 +414,7 @@ class Pdfetch::Finders
     rescue
       return nil
     end
-  end          
+  end
 
   def jbc(m,p)
     begin
@@ -431,7 +431,7 @@ class Pdfetch::Finders
       return nil
     end
   end
-         
+
   def nature(m,p)
     begin
       page = m.click p.links.with.text(/full text/i).and.href(/full/i)
