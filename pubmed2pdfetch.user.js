@@ -1,6 +1,6 @@
 // pubmed2pdfetch
-// v0.2
-// 2006-10-15
+// v0.3
+// 2007-06-19
 //
 // Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D.
 // <http://marcora.caltech.edu/>
@@ -45,18 +45,19 @@ function insertPubmed2Pdfetch(){
         var re = /PMID:\s+(\d+)\s+/;
 
         var pos = html.search(re);
-    
+
         if (pos >= 0){
 
-            var pmid = re.exec(html)[1]; 
-	
+            var pmid = re.exec(html)[1];
+
+            var span = document.createElement('span');
+            span.innerHTML = "&nbsp;";
+
             var a = document.createElement("a");
             a.setAttribute("title","Fetch the reprint of this article using PDFetch");
             a.setAttribute("href","http://localhost:3301/fetch/"+pmid);
             a.setAttribute("class","dblinks");
-    
             var anchor = document.createTextNode("Fetch");
-    
             a.appendChild(anchor);
 
             var linkbar = document.evaluate("//span[@class='linkbar']",
@@ -65,7 +66,7 @@ function insertPubmed2Pdfetch(){
                                             XPathResult.FIRST_ORDERED_NODE_TYPE,
                                             null).singleNodeValue;
 
-            if (linkbar != null){ linkbar.appendChild(a); }
+            if (linkbar != null){ linkbar.appendChild(span); linkbar.appendChild(a); }
         }
     }
 }
