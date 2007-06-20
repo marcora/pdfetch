@@ -27,7 +27,7 @@
 // @name          pubmed2pdfetch
 // @namespace     http://edoardo.marcora.net/
 // @description   Append a 'Fetch' link to pdfetch when browsing PubMed.
-// @include       http://www.ncbi.nlm.nih.gov/entrez/*
+// @include       http://www.ncbi.nlm.nih.gov/sites/entrez/*
 // ==/UserScript==
 
 function insertPubmed2Pdfetch(){
