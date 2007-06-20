@@ -1,6 +1,6 @@
 ## pdfetch
-## v0.5
-## 2007-06-15
+## v0.6
+## 2007-06-19
 ##
 ## Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D.
 ## <http://marcora.caltech.edu/>
