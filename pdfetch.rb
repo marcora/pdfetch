@@ -294,7 +294,7 @@ class Pdfetch::Finders
   # Pass a finder the mechanize agent (m) and the pubmed linkout page (p), and
   # it will return either the pdf reprint or nil.
 
-  def generic(m,p)
+  def zeneric(m,p) # this finder has been renamed 'zeneric' instead of 'generic' to have it called last (as last resort)
     begin
       page = m.click p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i)
       if page.kind_of? Reprint
@@ -371,7 +371,21 @@ class Pdfetch::Finders
       page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
       page = m.click page.links.with.href(/sdarticle\.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'cell press' finder..."
+        puts "** fetching reprint using the 'science direct' finder..."
+        return page
+      else
+        return nil
+      end
+    rescue
+      return nil
+    end
+  end
+
+    def science_direct_2(m,p)
+    begin
+      page = m.click page.links.with.href(/sdarticle\.pdf$/i)
+      if page.kind_of? Reprint
+        puts "** fetching reprint using the 'science direct 2' finder..."
         return page
       else
         return nil
