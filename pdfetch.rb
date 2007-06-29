@@ -1,6 +1,6 @@
 ## pdfetch
-## v0.6
-## 2007-06-19
+## v0.7
+## 2007-06-29
 ##
 ## Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D.
 ## <http://marcora.caltech.edu/>
@@ -368,8 +368,9 @@ class Pdfetch::Finders
 
   def science_direct(m,p)
     begin
-      page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
-      page = m.click page.links.with.href(/sdarticle\.pdf$/i)
+      page = m.get(p.at('body').inner_html.scan(/http:\/\/.*sdarticle.pdf/).first)
+#      page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
+#      page = m.click page.links.with.href(/sdarticle\.pdf$/i)
       if page.kind_of? Reprint
         puts "** fetching reprint using the 'science direct' finder..."
         return page
