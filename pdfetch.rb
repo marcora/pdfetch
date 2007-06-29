@@ -1,6 +1,6 @@
 ## pdfetch
-## v0.3
-## 2006-10-16
+## v0.4
+## 2007-06-29
 ##
 ## Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D.
 ## <http://marcora.caltech.edu/>
@@ -22,7 +22,7 @@ require 'mechanize'
 
 Camping.goes :Pdfetch
 
-class Reprint < WWW::Mechanize::File    
+class Reprint < WWW::Mechanize::File
   # empty class to use as Mechanize pluggable parser for pdf files
 end
 
@@ -33,16 +33,16 @@ module Pdfetch::Controllers
       redirect "http://code.google.com/p/pdfetch/"
     end
   end
-  
-  class Static < R '/(\d+)\.pdf$'         
+
+  class Static < R '/(\d+)\.pdf$'
     def get(id)
       @pmid = id.to_s
       @headers['Content-Type'] = "application/pdf"
       @headers['X-Sendfile'] = "#{Dir.getwd}/#{id}.pdf"
     end
-  end 
+  end
 
-  class Fetch < R '/fetch/(\d+)$'    
+  class Fetch < R '/fetch/(\d+)$'
     def get(id)
       @pmid = id.to_s
       @uri = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=#{id}&retmode=ref&cmd=prlinks"
@@ -76,7 +76,7 @@ module Pdfetch::Controllers
         render :failure
       end
     end
-  end    
+  end
 
   class Check < R '/check/(\d+)$'
     def get(id)
@@ -86,7 +86,7 @@ module Pdfetch::Controllers
 
 end
 
-  
+
 module Pdfetch::Views
 
   def layout
@@ -114,7 +114,7 @@ class Pdfetch::Finders
   # Pass a finder the mechanize agent (m) and the pubmed linkout page (p), and
   # it will return either the pdf reprint or nil.
 
-  def generic(m,p)
+  def zeneric(m,p) # this finder has been renamed 'zeneric' instead of 'generic' to have it called last (as last resort)
     begin
       page = m.click p.links.with.text(/pdf|full[\s-]?text|reprint/i).and.href(/.pdf$/i)
       if page.kind_of? Reprint
@@ -128,7 +128,7 @@ class Pdfetch::Finders
     end
   end
 
-  def springer_link(m,p)    
+  def springer_link(m,p)
     begin
       page = m.click p.links.with.href(/fulltext.pdf$/i)
       if page.kind_of? Reprint
@@ -170,7 +170,7 @@ class Pdfetch::Finders
       return nil
     end
   end
-  
+
   def wiley(m,p)
     begin
       page = m.click p.links.with.text(/pdf/i).and.href(/pdfstart/i)
@@ -188,10 +188,12 @@ class Pdfetch::Finders
 
   def science_direct(m,p)
     begin
-      page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
-      page = m.click page.links.with.href(/sdarticle\.pdf$/i)
+      return nil unless p.uri.to_s =~ /sciencedirect/i
+      page = m.get(p.at('body').inner_html.scan(/http:\/\/.*sdarticle.pdf/).first)
+#      page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
+#      page = m.click page.links.with.href(/sdarticle\.pdf$/i)
       if page.kind_of? Reprint
-        puts "** fetching reprint using the 'cell press' finder..."
+        puts "** fetching reprint using the 'science direct' finder..."
         return page
       else
         return nil
@@ -199,8 +201,8 @@ class Pdfetch::Finders
     rescue
       return nil
     end
-  end          
-  
+  end
+
   def ingenta_connect(m,p)
     begin
       page = m.click p.links.with.href(/mimetype=.*pdf$/i)
@@ -234,7 +236,7 @@ class Pdfetch::Finders
     rescue
       return nil
     end
-  end          
+  end
 
   def jbc(m,p)
     begin
@@ -251,9 +253,10 @@ class Pdfetch::Finders
       return nil
     end
   end
-         
+
   def nature(m,p)
     begin
+      return nil if p.uri.to_s =~ /sciencedirect/i # think of a better way to skip this finder for sciencedirect reprints!
       page = m.click p.links.with.text(/full text/i).and.href(/full/i)
       page = m.click page.links.with.href(/.pdf$/i)
       if page.kind_of? Reprint
