@@ -1,6 +1,6 @@
 ## pdfetch
 ## v0.7
-## 2007-06-29y
+## 2007-06-29
 ##
 ## Copyright (c) 2006, Edoardo "Dado" Marcora, Ph.D.
 ## <http://marcora.caltech.edu/>
@@ -338,7 +338,7 @@ class Pdfetch::Finders
 
   def blackwell_synergy(m,p)
     begin
-      return nil unless p.uri.to_s =~ /\/doi\/abs\//i
+      raise unless p.uri.to_s =~ /\/doi\/abs\//i
       page = m.get(p.uri.to_s.sub('abs', 'pdf'))
       if page.kind_of? Reprint
         puts "** fetching reprint using the 'blackwell synergy' finder..."
@@ -368,7 +368,7 @@ class Pdfetch::Finders
 
   def science_direct(m,p)
     begin
-      return nil unless p.uri.to_s =~ /sciencedirect/i
+      raise unless p.uri.to_s =~ /sciencedirect/i
       page = m.get(p.at('body').inner_html.scan(/http:\/\/.*sdarticle.pdf/).first)
 #      page = m.click p.links.with.text(/sciencedirect/i).and.href(/sciencedirect/i)
 #      page = m.click page.links.with.href(/sdarticle\.pdf$/i)
@@ -436,7 +436,7 @@ class Pdfetch::Finders
 
   def nature(m,p)
     begin
-      return nil if p.uri.to_s =~ /sciencedirect/i # think of a better way to skip this finder for sciencedirect reprints!
+      raise if p.uri.to_s =~ /sciencedirect/i # think of a better way to skip this finder for sciencedirect reprints!
       page = m.click p.links.with.text(/full text/i).and.href(/full/i)
       page = m.click page.links.with.href(/.pdf$/i)
       if page.kind_of? Reprint
