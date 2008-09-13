@@ -60,7 +60,9 @@ get '/pdf_urls' do
   # Take page url and return a list of pdf urls where pdf associated to page can be found
   raise unless url = params['url'] and is_valid_url(url)
   pdf_urls = []
-  pmid, pmcid, doi = nil
+  pmid = nil
+  pmcid = nil
+  doi = nil
 
   case id = params['id']
   when /\d+/
@@ -122,9 +124,9 @@ get '/pdf_urls' do
       pdf_urls << "http://www.pubmedcentral.nih.gov/picrender.fcgi?doi=#{URI.escape(doi)}&blobtype=pdf"
     end
   rescue Timeout::Error
-    raise
+    nil
   rescue
-    raise
+    nil
   end
   pdf_urls = pdf_urls.flatten.compact.uniq
   puts pdf_urls
@@ -142,7 +144,7 @@ end
 
 class Finders # a finder take a mechanize agent (m) and page (p) and return either the url of the pdf associated with page or nil
 
-  def nature_doi_finder(m,p)
+  def nature_doifinder(m,p)
     # http://www.nature.com/doifinder/...
     # goto nature
     if p.uri.to_s =~ /nature\.com\/doifinder\/\S+/i
@@ -151,7 +153,7 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
     end
   end
 
-  def elsevier_linking_hub(m,p)
+  def elsevier_linkinghub(m,p)
     # http://linkinghub.elsevier.com/retrieve/...
     # goto science_direct
     if p.uri.to_s =~ /linkinghub\.elsevier\.com/i
@@ -168,19 +170,54 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
     end
   end
 
+  def lww_gateway(m,p)
+    # goto lww
+    if p.uri.to_s =~ /\/lwwgateway\//i
+      an = p.uri.to_s.scan(/\?an=([\d\-]+)/i).first.first rescue nil
+      if an
+        p = m.get("http://pt.wkhealth.com/pt/re/lwwgateway/landingpage.htm?an=#{an}") rescue Net::HTTPUnauthorized
+      end
+      xml = p.at("body").inner_html.scan(/<extraField name="(\w{2})">\s*(\S+)\s*<\/extraField>/i)
+      fields = {}
+      for field in xml
+        fields[field[0]] = field[1]
+      end
+      fields.delete('jn')
+      url = "http://content.wkhealth.com/linkback/openurl?"+WWW::Mechanize.build_query_string(fields)
+      url.sub!('is=', 'issn=').sub!('vo=', 'volume=').sub!('ip=', 'issue=').sub!('pg=', 'spage=')
+      p = m.get(url) rescue Net::HTTPUnauthorized
+      return lww(m,p)
+    end
+  end
+
+  def lww(m,p)
+    # goto lww_pdf
+    #
+    # http://www.jaacap.com/pt/re/jaacap/abstract.00004583-200807000-00004.htm =>
+    # http://www.jaacap.com/pt/re/jaacap/pdfhandler.00004583-200807000-00004.pdf
+    #
+    # http://www.aidsonline.com/pt/re/aids/abstract.00002030-200512020-00006.htm;jsessionid= =>
+    # http://www.aidsonline.com/pt/re/aids/pdfhandler.00002030-200512020-00006.pdf;jsessionid=
+    if p.uri.to_s =~ /\/(abstract|fulltext)\.([\d\-]+)\.htm/i
+      url = p.uri.to_s.gsub(/\/(?:abstract|fulltext)\.([\d\-]+)\.htm/i, '/pdfhandler.\1.pdf')
+      p = m.get(url) rescue Net::HTTPUnauthorized
+      return lww_pdf(m,p)
+    end
+  end
+
+  def lww_pdf(m,p)
+    # http://www.jaacap.com/pt/re/jaacap/pdfhandler.00004583-200807000-00004.pdf
+    if p.uri.to_s =~ /\/pdfhandler\.[\w\-\.]+\.pdf/i
+      pdf_url = p.frames.with.name(/pdf/i).first.src rescue nil
+      return pdf_url
+    end
+  end
+
   def springer_link(m,p)
     # http://www.springerlink.com/content/p440667321125310/?p=eee8d594329c4374810fc9bcb55a47ce&pi=1 =>
     # http://www.springerlink.com/content/p440667321125310/fulltext.pdf
     if p.uri.to_s =~ /springerlink\.com/i
       pdf_url = p.uri.to_s.gsub(/\/content\/(\w+)(?:\/|$)\S*$/i, '/content/\1/fulltext.pdf')
-      return pdf_url
-    end
-  end
-
-  def lww(m,p)
-    # http://www.jaacap.com/pt/re/jaacap/abstract.00004583-200807000-00004.htm => http://www.jaacap.com/pt/re/jaacap/pdfhandler.00004583-200807000-00004.pdf
-    if p.uri.to_s =~ /\/(?:abstract|fulltext)\.\S+\.htm/i
-      pdf_url = p.uri.to_s.gsub(/\/(?:abstract|fulltext)\.(\S+)\.htm\S*$/, '/pdfhandler.\1.pdf')
       return pdf_url
     end
   end
@@ -202,10 +239,10 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
       # http://www3.interscience.wiley.com/journal/114803237/abstract => http://www3.interscience.wiley.com/cgi-bin/fulltext/114803237/PDFSTART
       # page = m.get p.uri.to_s.gsub(/\/journal\/(\d+)\/abstract$/i, '/cgi-bin/fulltext/\1/PDFSTART')
       # page = m.click page.frames.with.name(/main/i).and.src(/mode=pdf/i)
-      ## => http://download.interscience.wiley.com/cgi-bin/fulltext?ID=120846700&mode=pdf
+      # => http://download.interscience.wiley.com/cgi-bin/fulltext?ID=120846700&mode=pdf
       id = p.uri.to_s.scan(/\/journal\/(\d+)\/abstract/i).first.first rescue nil
       if id
-        pdf_url =  "http://download.interscience.wiley.com/cgi-bin/fulltext?ID=#{id}&mode=pdf"
+        pdf_url = "http://download.interscience.wiley.com/cgi-bin/fulltext?ID=#{id}&mode=pdf"
       else
         pdf_url =  nil
       end
