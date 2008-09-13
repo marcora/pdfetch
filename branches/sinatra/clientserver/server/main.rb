@@ -303,8 +303,11 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
   def liebertol_and_uchicago(m,p)
     # http://www.liebertonline.com/doi/abs|full/10.1089%2F10430340252899046 =>
     # http://www.liebertonline.com/doi/pdf/10.1089/10430340252899046
+    #
+    # http://www.expert-reviews.com/doi/abs|full/10.1586/14760584.4.3.281?url_ver=Z39.88-2003&rfr_id=ori:rid:crossref.org =>
+    # http://www.expert-reviews.com/doi/pdf/10.1586/14760584.4.3.281
     if p.uri.to_s =~ /\/doi\/(abs|full)\/\S+$/i
-      pdf_url =  p.uri.to_s.gsub(/\/doi\/(?:abs|full)\/([^\s?]+)\S*$/i, '/doi/pdf/\1')
+      pdf_url =  p.uri.to_s.gsub(/\/doi\/(?:abs|full)\/([^\s\?]+)\S*$/i, '/doi/pdf/\1')
       return pdf_url
     end
   end
@@ -414,6 +417,13 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
         pdf_url = p.uri.to_s.gsub(/apa\.org\/index\.cfm\?\S+$/i, "apa.org/index.cfm?fa=main.showContent&id=#{id}&view=fulltext&format=pdf")
         return pdf_url
       end
+    end
+  end
+
+  def cterm_html(m,p)
+    if p.uri.to_s =~ /\/\S+\.(htm|html)$/i
+      pdf_url = p.uri.to_s.gsub(/\/(\S+)\.(?:htm|html)$/i, '/\1.pdf')
+      return pdf_url
     end
   end
 
