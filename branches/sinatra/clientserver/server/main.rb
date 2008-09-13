@@ -18,6 +18,7 @@
 ##
 ## --------------------------------------------------------------------
 
+
 require 'rubygems'
 require 'sinatra'
 require 'logger'
@@ -75,7 +76,8 @@ get '/pdf_urls' do
 
   begin
     # load url into mechanize page
-    m = WWW::Mechanize.new; m.read_timeout = 10
+    m = WWW::Mechanize.new
+    m.read_timeout = 10
     p = m.get(url) rescue Net::HTTPUnauthorized
 
     # init pmid from url if not set
