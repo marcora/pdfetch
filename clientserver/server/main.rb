@@ -377,8 +377,11 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
   def landes_bioscience(m,p)
     # landesbioscience.com
     if p.uri.to_s =~ /landesbioscience\.com/i
-      pdf_url =  p.links.with.text(/Download\s+PDF/).first.href rescue nil
-      return pdf_url
+      id =  p.links.with.text(/Download\s+PDF/).first.href rescue nil
+      if id.sub!(/[\.]{0,2}\//, '')
+        pdf_url = p.uri.merge(id).to_s
+        return pdf_url
+      end
     end
   end
 
