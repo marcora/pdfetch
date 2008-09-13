@@ -94,9 +94,9 @@ var pdfetch = {
         if (content.document.contentType == 'application/pdf') {
             pdf = this.get_pdf(url);
             if ( pdf ) {
-                var reprint_filename = this.post_pdf(pdf, this.url_for());
+                var reprint_filename = this.post_pdf(pdf, this.url_for('reprints'));
                 if ( reprint_filename ) {
-                    content.document.location.href = this.url_for(reprint_filename);
+                    content.document.location.href = this.url_for('reprints', reprint_filename);
                 } else {
                     alert("server error");
                 }
@@ -112,9 +112,9 @@ var pdfetch = {
                 if ( pdf ) { break }
             }
             if ( pdf ) {
-                var reprint_filename = this.post_pdf(pdf, this.url_for());
+                var reprint_filename = this.post_pdf(pdf, this.url_for('reprints'));
                 if ( reprint_filename ) {
-                    content.document.location.href = this.url_for(reprint_filename);
+                    content.document.location.href = this.url_for('reprints', reprint_filename);
                 } else {
                     alert("server error");
                 }
