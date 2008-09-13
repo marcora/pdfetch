@@ -218,7 +218,7 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
     # http://www.nature.com/neuro/journal/vaop/ncurrent/abs|full/nn2013.html => http://www.nature.com/neuro/journal/vaop/ncurrent/pdf/nn2013.pdf
     # http://www.nature.com/news/2008/080806/full/454682a.html => http://www.nature.com/news/2008/080806/pdf/454682a.pdf
     if p.uri.to_s =~ /nature\.com/i and not p.uri.to_s =~ /nature\.com\/doifinder/i
-      pdf_url = p.uri.to_s.gsub(/nature\.com\/(\S+)\/(?:abs|full)\/([\w\.]+).html\S*$/i, 'nature.com/\1/pdf/\2.pdf')
+      pdf_url = p.uri.to_s.gsub(/nature\.com\/(\S+)\/(?:abs|full)\/([\w\-\.]+).html\S*$/i, 'nature.com/\1/pdf/\2.pdf')
       return pdf_url
     end
   end
@@ -227,7 +227,7 @@ class Finders # a finder take a mechanize agent (m) and page (p) and return eith
     # http://www.biomedcentral.com/1471-2164/4/19 => http://www.biomedcentral.com/content/pdf/1471-2164-4-19.pdf
     # http://www.biomedcentral.com/1471-2164/4/19/abstract/
     if p.uri.to_s =~ /biomedcentral\.com/i
-      pdf_url = t p.uri.to_s.gsub(/biomedcentral\.com\/(\w+-\w+)\/(\w+)\/(\w+)\S*$/i, 'biomedcentral.com/content/pdf/\1-\2-\3.pdf')
+      pdf_url = p.uri.to_s.gsub(/biomedcentral\.com\/(\w+\-\w+)\/(\w+)\/(\w+)\/?\S*$/i, 'biomedcentral.com/content/pdf/\1-\2-\3.pdf')
       return pdf_url
     end
   end
