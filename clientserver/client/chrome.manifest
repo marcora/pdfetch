@@ -1,5 +1,0 @@
-content	pdfetch	content/
-locale	pdfetch	en-US	locale/en-US/
-skin	pdfetch	classic/1.0	skin/
-overlay	chrome://browser/content/browser.xul	chrome://pdfetch/content/overlay.xul
-style	chrome://global/content/customizeToolbar.xul	chrome://pdfetch/skin/overlay.css
