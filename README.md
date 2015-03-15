@@ -7,11 +7,11 @@ If *pdfetch* cannot find a local copy of the reprint, then it downloads the repr
 
 If you use the "ferret" branch version of *pdfetch*, PDF reprints in the local repository can be easily searched using any web browser.
 
-*pdfetch* is best used from !PubMed using a *bookmarklet* (for any modern web browser) or a *greasemonkey script* (for Firefox only). Both assume that the pdfetch server is listening on `localhost:3301` and that Javascript is enabled in your web browser.
+*pdfetch* is best used from PubMed using a *bookmarklet* (for any modern web browser) or a *greasemonkey script* (for Firefox only). Both assume that the pdfetch server is listening on `localhost:3301` and that Javascript is enabled in your web browser.
 
-To install the bookmarklet just drag the link in the list to your right onto your Links/Bookmarks toolbar/menu. To use the bookmarklet, just click it when using !PubMed (of course the pdfetch server needs to be running too!).
+To install the bookmarklet just drag <a href="javascript:var html,pos,pmid='',re=/PMID:\s+(\d+)\s+/;html=document.body.innerHTML;pos=html.search(re);if(pos>=0){pmid=re.exec(html)[1];}location.href='http://localhost:3301/fetch/'+pmid;">this link</a> onto your Links/Bookmarks toolbar/menu. To use the bookmarklet, just click it when using PubMed (of course the pdfetch server needs to be running too!).
 
-To install the greasemonkey script just make sure you are using Firefox + Greasemonkey and click on [this link](http://pdfetch.googlecode.com/svn/trunk/pubmed2pdfetch.user.js). It adds a 'Fetch' link to the article display page in !PubMed for easy access to *pdfetch*.
+To install the greasemonkey script just make sure you are using Firefox + Greasemonkey and click on [this link](http://pdfetch.googlecode.com/svn/trunk/pubmed2pdfetch.user.js). It adds a 'Fetch' link to the article display page in PubMed for easy access to *pdfetch*.
 
 *pdfetch* requires [Camping](http://rubyforge.org/projects/camping/) and [Mechanize](http://rubyforge.org/projects/mechanize/).
 
